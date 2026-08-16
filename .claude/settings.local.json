@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(EXPO_NO_DOTENV=1 WATCHMAN_DISABLE_RECRAWL=1 npm run web:*)",
+      "Bash(lsof:*)",
+      "Bash(pkill:*)",
+      "Bash(nvm --version)",
+      "Bash(source ~/.nvm/nvm.sh)",
+      "Bash(nvm install:*)",
+      "Bash(nvm use:*)",
+      "Bash(curl:*)",
+      "Bash(bash)",
+      "Bash(fnm install:*)",
+      "Bash(fnm use:*)",
+      "Bash(node --version:*)",
+      "Bash(git init:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

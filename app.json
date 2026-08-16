@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Bridge",
+    "slug": "bridge",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "bridge",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#F7F2EA"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.bridge.app"
+    },
+    "android": {
+      "package": "com.bridge.app"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
