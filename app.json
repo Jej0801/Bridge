@@ -16,7 +16,26 @@
     "android": {
       "package": "com.bridge.app"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-share-intent",
+        {
+          "iosActivationRules": {
+            "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
+            "NSExtensionActivationSupportsText": true
+          },
+          "androidIntentFilters": [
+            "text/*"
+          ],
+          "androidMultiIntentFilters": [
+            "text/*"
+          ],
+          "disableAndroidShareForApps": false
+        }
+      ],
+      "expo-asset"
+    ],
     "experiments": {
       "typedRoutes": false
     }

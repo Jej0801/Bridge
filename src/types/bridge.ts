@@ -49,6 +49,7 @@ export interface Profile {
 export interface Couple {
   id: string;
   name: string;
+  photo_url: string | null;
   invite_code: string;
   created_at: string;
 }
@@ -72,10 +73,22 @@ export interface Idea {
   category: IdeaCategory;
   tags: string[];
   location_name: string | null;
+  address: string | null; // Full address
   latitude: number | null;
   longitude: number | null;
   cost_level: CostLevel;
   status: IdeaStatus;
+  // Enhanced date spot fields
+  estimated_duration_minutes: number | null; // How long the activity takes
+  best_time_of_day: string[] | null; // ['morning', 'afternoon', 'evening', 'night']
+  vibe_tags: string[] | null; // ['romantic', 'adventurous', 'relaxing', 'energetic']
+  ai_extracted: boolean; // Whether this was AI-processed
+  rating: number | null; // 1-5 rating from reviews/search
+  popular_times: Record<string, number[]> | null; // Busy times by day
+  nearby_spots: string[] | null; // IDs of nearby spots for itinerary building
+  phone_number: string | null;
+  website_url: string | null;
+  hours_of_operation: string | null;
   created_at: string;
   updated_at: string;
 }

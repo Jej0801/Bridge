@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Screen, SectionHeader } from '@/components/ui';
 import { IdeaCard } from '@/components/IdeaCard';
+import { CouplePolaroid } from '@/components/CouplePolaroid';
 import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -41,6 +42,13 @@ export default function Home() {
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.greeting}>{couple?.name ?? 'Us'}</Text>
           <Text style={typography.bodySoft}>What are we doing next?</Text>
+
+          {/* Couple polaroid photo */}
+          <CouplePolaroid
+            imageUri={couple?.photo_url}
+            coupleName={couple?.name ?? 'Us'}
+            onAddPhoto={() => router.push('/settings')}
+          />
 
           {/* Quick actions */}
           <View style={styles.actions}>

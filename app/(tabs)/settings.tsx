@@ -1,12 +1,14 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { Button, Card, Screen, SectionHeader } from '@/components/ui';
+import { Screen } from '@/components/ui';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
+import { safePadding } from '@/theme/responsive';
 import { useBridgeStore } from '@/store/useBridgeStore';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { testSupabaseConnection } from '@/lib/testConnection';
 
 export default function Settings() {
   const couple = useBridgeStore((s) => s.couple);
@@ -15,102 +17,309 @@ export default function Settings() {
   const signOut = useBridgeStore((s) => s.signOut);
 
   const me = profiles.find((p) => p.id === currentUserId);
+  const partner = profiles.find((p) => p.id !== currentUserId);
+
+  const [testingConnection, setTestingConnection] = useState(false);
+
+  const testConnection = async () => {
+    setTestingConnection(true);
+    try {
+      const result = await testSupabaseConnection();
+      Alert.alert(
+        result.success ? '✓ Connection Active' : '✗ Connection Failed',
+        result.message,
+      );
+    } catch (error: any) {
+      Alert.alert('Test Error', error.message);
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            router.replace('/auth');
+          },
+        },
+      ],
+    );
+  };
+
+  const showInviteCode = () => {
+    Alert.alert(
+      'Invite Code',
+      `Share this code with your partner:\n\n${couple?.invite_code ?? 'BRIDGE-XXXX'}`,
+      [{ text: 'Done' }],
+    );
+  };
 
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
-        <SectionHeader title="Profile" />
-        <Card>
-          <Text style={typography.title}>{me?.display_name ?? 'You'}</Text>
-          <Text style={typography.small}>Display name and photo editing coming soon.</Text>
-        </Card>
+        {/* Account Section */}
+        <SettingsSection title="Account">
+          <SettingsRow
+            label={me?.display_name ?? 'Your profile'}
+            value="Edit"
+            onPress={() => router.push('/profile/edit')}
+          />
+          <SettingsRow
+            label="Couple space"
+            value={couple?.name ?? 'Us'}
+            onPress={() => router.push('/couple/edit')}
+          />
+          <SettingsRow
+            label="Invite partner"
+            value={couple?.invite_code ?? ''}
+            onPress={showInviteCode}
+            last
+          />
+        </SettingsSection>
 
-        <SectionHeader title="Couple space" />
-        <Card>
-          <Text style={typography.title}>{couple?.name ?? 'Us'}</Text>
-          <Text style={[typography.small, { marginTop: spacing.xs }]}>
-            Share this code so your partner can join:
+        {/* Preferences Section */}
+        <SettingsSection title="Preferences">
+          <SettingsRow
+            label="Notifications"
+            value="Off"
+            onPress={() => Alert.alert('Coming Soon', 'Notification settings coming soon.')}
+          />
+          <SettingsRow
+            label="Theme"
+            value="System"
+            onPress={() => Alert.alert('Coming Soon', 'Theme selection coming soon.')}
+            last
+          />
+        </SettingsSection>
+
+        {/* Connected Services */}
+        <SettingsSection title="Connected Services">
+          <SettingsRow
+            label="TikTok"
+            value="Via share/paste"
+            disabled
+          />
+          <SettingsRow
+            label="Instagram"
+            value="Via share/paste"
+            disabled
+          />
+          <SettingsRow
+            label="Google Maps"
+            value="Via share/paste"
+            disabled
+          />
+          <SettingsRow
+            label="Spotify / Apple Music"
+            value="Not connected"
+            onPress={() => Alert.alert('Coming Soon', 'Music integration coming soon.')}
+            last
+          />
+        </SettingsSection>
+
+        {/* Data & Privacy */}
+        <SettingsSection title="Data & Privacy">
+          <SettingsRow
+            label="Storage"
+            value={isSupabaseConfigured ? 'Cloud' : 'Local'}
+            onPress={isSupabaseConfigured ? testConnection : undefined}
+            disabled={!isSupabaseConfigured}
+          />
+          <SettingsRow
+            label="Export data"
+            onPress={() => Alert.alert('Coming Soon', 'Data export coming soon.')}
+          />
+          <SettingsRow
+            label="Privacy policy"
+            onPress={() => Alert.alert('Privacy', 'Your data is private to you and your partner only.')}
+            last
+          />
+        </SettingsSection>
+
+        {/* About */}
+        <SettingsSection title="About">
+          <SettingsRow
+            label="Version"
+            value="0.1.0"
+            disabled
+          />
+          <SettingsRow
+            label="Help & Support"
+            onPress={() => Alert.alert('Support', 'For help, contact support@bridge.app')}
+            last
+          />
+        </SettingsSection>
+
+        {/* Sign Out Button */}
+        <View style={styles.signOutContainer}>
+          <Pressable onPress={handleSignOut} style={styles.signOutButton}>
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </Pressable>
+        </View>
+
+        {/* Footer Info */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            {couple?.name ?? 'Bridge'} · {partner ? `You and ${partner.display_name}` : 'Waiting for partner'}
           </Text>
-          <View style={styles.codeBox}>
-            <Text style={styles.code}>{couple?.invite_code ?? 'BRIDGE-XXXX'}</Text>
-          </View>
-        </Card>
-
-        <SectionHeader title="Notifications" />
-        <Card>
-          <Text style={typography.bodySoft}>
-            Reminders for planned dates and gentle "plan something" nudges — coming soon.
-          </Text>
-        </Card>
-
-        <SectionHeader title="Connected services" />
-        <Card>
-          <ServiceRow name="TikTok share links" status="Works via share/paste" />
-          <ServiceRow name="Instagram share links" status="Works via share/paste" />
-          <ServiceRow name="Google Maps links" status="Works via share/paste" />
-          <ServiceRow name="Spotify / Apple Music" status="Later" last />
-        </Card>
-
-        <SectionHeader title="Data & privacy" />
-        <Card>
-          <Text style={typography.bodySoft}>
-            Bridge is designed as a private space for couples. Your ideas, plans, and
-            memories are only visible to the two of you.
-          </Text>
-          <Text style={[typography.small, { marginTop: spacing.sm, color: colors.inkFaint }]}>
-            Backend: {isSupabaseConfigured ? 'Supabase connected' : 'local demo data'}
-          </Text>
-        </Card>
-
-        <View style={{ height: spacing.xl }} />
-        <Button
-          label="Sign out"
-          variant="secondary"
-          onPress={() => {
-            signOut();
-            router.replace('/auth');
-          }}
-        />
+          {isSupabaseConfigured && (
+            <Text style={[styles.footerText, { marginTop: spacing.xs }]}>
+              ✓ Synced to cloud
+            </Text>
+          )}
+        </View>
       </ScrollView>
     </Screen>
   );
 }
 
-function ServiceRow({ name, status, last }: { name: string; status: string; last?: boolean }) {
+function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <View style={[styles.serviceRow, !last && styles.serviceBorder]}>
-      <Text style={typography.body}>{name}</Text>
-      <Text style={typography.small}>{status}</Text>
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.sectionContent}>
+        {children}
+      </View>
     </View>
   );
 }
 
+interface SettingsRowProps {
+  label: string;
+  value?: string;
+  onPress?: () => void;
+  disabled?: boolean;
+  last?: boolean;
+}
+
+function SettingsRow({ label, value, onPress, disabled, last }: SettingsRowProps) {
+  const content = (
+    <View style={[styles.row, !last && styles.rowBorder]}>
+      <Text style={[styles.rowLabel, disabled && styles.rowDisabled]}>{label}</Text>
+      <View style={styles.rowRight}>
+        {value && (
+          <Text style={[styles.rowValue, disabled && styles.rowDisabled]}>
+            {value}
+          </Text>
+        )}
+        {onPress && !disabled && (
+          <Text style={styles.rowChevron}>›</Text>
+        )}
+      </View>
+    </View>
+  );
+
+  if (onPress && !disabled) {
+    return (
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.rowPressable,
+          pressed && styles.rowPressed,
+        ]}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+
+  return content;
+}
+
 const styles = StyleSheet.create({
   content: {
-    padding: spacing.lg,
     paddingBottom: 48,
   },
-  codeBox: {
+  section: {
+    marginTop: spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.inkSoft,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: spacing.sm,
+    paddingHorizontal: safePadding.horizontal,
+  },
+  sectionContent: {
+    backgroundColor: colors.bg,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+  },
+  rowPressable: {
+    width: '100%',
+  },
+  rowPressed: {
     backgroundColor: colors.bgSunken,
-    borderRadius: 10,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    marginTop: spacing.md,
   },
-  code: {
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 3,
-    color: colors.ink,
-  },
-  serviceRow: {
+  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: spacing.md,
+    paddingHorizontal: safePadding.horizontal,
+    minHeight: 44,
   },
-  serviceBorder: {
+  rowBorder: {
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  rowLabel: {
+    fontSize: 16,
+    color: colors.ink,
+  },
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  rowValue: {
+    fontSize: 16,
+    color: colors.inkSoft,
+  },
+  rowChevron: {
+    fontSize: 24,
+    color: colors.inkFaint,
+    marginLeft: spacing.xs,
+  },
+  rowDisabled: {
+    color: colors.inkFaint,
+  },
+  signOutContainer: {
+    marginTop: spacing.xl,
+    paddingHorizontal: safePadding.horizontal,
+  },
+  signOutButton: {
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  signOutText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#EF4444',
+  },
+  footer: {
+    marginTop: spacing.xl,
+    paddingHorizontal: safePadding.horizontal,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 13,
+    color: colors.inkFaint,
+    textAlign: 'center',
   },
 });
